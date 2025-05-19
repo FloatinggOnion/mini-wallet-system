@@ -15,7 +15,7 @@ namespace MiniWallet.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "9.0.4");
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
 
             modelBuilder.Entity("MiniWallet.Models.Currency", b =>
                 {
@@ -47,25 +47,17 @@ namespace MiniWallet.Migrations
                         {
                             Id = 1,
                             IsActive = true,
-                            Name = "Bitcoin",
-                            NetworkType = "Bitcoin",
-                            Symbol = "BTC"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            IsActive = true,
                             Name = "Ethereum",
                             NetworkType = "Ethereum",
                             Symbol = "ETH"
                         },
                         new
                         {
-                            Id = 3,
+                            Id = 2,
                             IsActive = true,
-                            Name = "Solana",
-                            NetworkType = "Solana",
-                            Symbol = "SOL"
+                            Name = "Bitcoin",
+                            NetworkType = "Bitcoin",
+                            Symbol = "BTC"
                         });
                 });
 
@@ -78,20 +70,32 @@ namespace MiniWallet.Migrations
                     b.Property<decimal>("Amount")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("BlockNumber")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("CurrencyId")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
-                    b.Property<decimal>("Fee")
+                    b.Property<string>("ErrorMessage")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FromAddress")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("GasPrice")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("GasUsed")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Status")
@@ -110,8 +114,6 @@ namespace MiniWallet.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CurrencyId");
 
                     b.HasIndex("WalletId");
 
@@ -138,10 +140,13 @@ namespace MiniWallet.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("PasswordHash")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -155,6 +160,12 @@ namespace MiniWallet.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Address")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -164,6 +175,12 @@ namespace MiniWallet.Migrations
 
                     b.Property<string>("LastName")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("UserId")
@@ -190,8 +207,26 @@ namespace MiniWallet.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("IV")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Network")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("PublicAddress")
                         .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Salt")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("UserId")
@@ -213,10 +248,13 @@ namespace MiniWallet.Migrations
                     b.Property<decimal>("Balance")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("CurrencyId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("UpdatedAt")
+                    b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("WalletId")
@@ -233,19 +271,11 @@ namespace MiniWallet.Migrations
 
             modelBuilder.Entity("MiniWallet.Models.Transaction", b =>
                 {
-                    b.HasOne("MiniWallet.Models.Currency", "Currency")
-                        .WithMany("Transactions")
-                        .HasForeignKey("CurrencyId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("MiniWallet.Models.Wallet", "Wallet")
                         .WithMany("Transactions")
                         .HasForeignKey("WalletId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Currency");
 
                     b.Navigation("Wallet");
                 });
@@ -293,15 +323,12 @@ namespace MiniWallet.Migrations
 
             modelBuilder.Entity("MiniWallet.Models.Currency", b =>
                 {
-                    b.Navigation("Transactions");
-
                     b.Navigation("WalletBalances");
                 });
 
             modelBuilder.Entity("MiniWallet.Models.User", b =>
                 {
-                    b.Navigation("Profile")
-                        .IsRequired();
+                    b.Navigation("Profile");
 
                     b.Navigation("Wallets");
                 });

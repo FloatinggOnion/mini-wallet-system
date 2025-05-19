@@ -1,11 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 
-public class LoginRequest
+namespace MiniWallet.DTOs
 {
-    [Required]
-    [EmailAddress]
-    public string Email { get; set; }
-    
-    [Required]
-    public string Password { get; set; }
+    public class LoginRequest
+    {
+        [Required]
+        [EmailAddress]
+        public string Email { get; set; } = string.Empty;
+        
+        [Required]
+        public string Password { get; set; } = string.Empty;
+    }
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { walletService } from '../services/api';
+import { useAuth } from '@/contexts/AuthContext';
+import { walletService } from '@/services/api';
 
 interface Wallet {
   id: string;
@@ -10,26 +11,19 @@ interface Wallet {
   }>;
 }
 
-interface Transaction {
-  id: string;
-  amount: number;
-  status: string;
-  createdAt: string;
-  currencyId: number;
-}
-
-export const useWallet = () => {
+export function useWallet() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { token } = useAuth();
 
   const getWallets = async () => {
     try {
       setLoading(true);
       setError(null);
-      const wallets = await walletService.getWallets();
-      return wallets;
+      const data = await walletService.getWallets();
+      return Array.isArray(data) ? data : [data];
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch wallets');
+      setError(err.response?.data?.error || 'Failed to fetch wallets');
       throw err;
     } finally {
       setLoading(false);
@@ -40,10 +34,9 @@ export const useWallet = () => {
     try {
       setLoading(true);
       setError(null);
-      const wallet = await walletService.getWalletDetails(walletId);
-      return wallet;
+      return await walletService.getWalletDetails(walletId);
     } catch (err: any) {
-      setError(err.message || 'Failed to fetch wallet details');
+      setError(err.response?.data?.error || 'Failed to fetch wallet details');
       throw err;
     } finally {
       setLoading(false);
@@ -54,24 +47,9 @@ export const useWallet = () => {
     try {
       setLoading(true);
       setError(null);
-      const wallet = await walletService.createWallet();
-      return wallet;
+      return await walletService.createWallet();
     } catch (err: any) {
-      setError(err.message || 'Failed to create wallet');
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getTransactions = async (walletId: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      const transactions = await walletService.getTransactions(walletId);
-      return transactions;
-    } catch (err: any) {
-      setError(err.message || 'Failed to fetch transactions');
+      setError(err.response?.data?.error || 'Failed to create wallet');
       throw err;
     } finally {
       setLoading(false);
@@ -84,6 +62,5 @@ export const useWallet = () => {
     getWallets,
     getWalletDetails,
     createWallet,
-    getTransactions,
   };
-}; 
+} 

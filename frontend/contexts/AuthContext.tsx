@@ -4,6 +4,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { authService } from '@/services/api';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 interface User {
   id: string;
@@ -33,13 +34,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if user is already logged in
     const checkAuth = async () => {
       try {
+        const token = Cookies.get('token');
+        if (!token) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
         const user = await authService.getCurrentUser();
         if (user) {
           setUser(user);
+        } else {
+          // If we have a token but no user, clear the token
+          authService.logout();
         }
       } catch (error) {
         console.error('Authentication error:', error);
         setUser(null);
+        // Clear invalid token
+        authService.logout();
       } finally {
         setLoading(false);
       }
@@ -51,13 +64,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      await authService.login({ email, password });
-      const user = await authService.getCurrentUser();
-      if (user) {
-        setUser(user);
-        router.push('/dashboard');
-      } else {
-        throw new Error('Failed to get user data after login');
+      const response = await authService.login({ email, password });
+      if (response.token) {
+        const user = await authService.getCurrentUser();
+        if (user) {
+          setUser(user);
+          router.push('/dashboard');
+        } else {
+          throw new Error('Failed to get user data after login');
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -71,13 +86,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const register = async (email: string, password: string, firstName: string, lastName: string) => {
     setLoading(true);
     try {
-      await authService.register({ email, password, firstName, lastName });
-      const user = await authService.getCurrentUser();
-      if (user) {
-        setUser(user);
-        router.push('/dashboard');
-      } else {
-        throw new Error('Failed to get user data after registration');
+      const response = await authService.register({ email, password, firstName, lastName });
+      if (response.token) {
+        const user = await authService.getCurrentUser();
+        if (user) {
+          setUser(user);
+          router.push('/dashboard');
+        } else {
+          throw new Error('Failed to get user data after registration');
+        }
       }
     } catch (error) {
       console.error('Registration error:', error);

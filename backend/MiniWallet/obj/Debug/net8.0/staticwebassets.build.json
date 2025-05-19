@@ -1,0 +1,12 @@
+{
+  "Version": 1,
+  "Hash": "PFYCIs8ODkhqYN7WK3VlgVC5+wswhLdlUX42iU2b/gU=",
+  "Source": "MiniWallet",
+  "BasePath": "_content/MiniWallet",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": [],
+  "Endpoints": []
+}

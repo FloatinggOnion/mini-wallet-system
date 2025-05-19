@@ -9,6 +9,9 @@ using Microsoft.IdentityModel.Tokens; // Add this for SymmetricSecurityKey, Sign
 using System.Security.Claims; // Add this for Claims
 using System.Text; // Add this for Encoding
 using Microsoft.AspNetCore.Identity; // Add this for IPasswordHasher
+using Microsoft.Extensions.Configuration;
+using MiniWallet.Data;
+using MiniWallet.DTOs;
 
 public interface IAuthService
 {
@@ -24,7 +27,10 @@ namespace MiniWallet.Services{
         private readonly IConfiguration _configuration;
         private readonly IPasswordHasher<User> _passwordHasher;
 
-        public AuthService(AppDbContext context, IConfiguration configuration, IPasswordHasher<User> passwordHasher)
+        public AuthService(
+            AppDbContext context, 
+            IConfiguration configuration, 
+            IPasswordHasher<User> passwordHasher)
         {
             _context = context;
             _configuration = configuration;
@@ -41,6 +47,7 @@ namespace MiniWallet.Services{
             var user = new User
             {
                 Id = Guid.NewGuid(),
+                Username = model.Email,
                 Email = model.Email,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
@@ -53,7 +60,8 @@ namespace MiniWallet.Services{
                 Id = Guid.NewGuid(),
                 UserId = user.Id,
                 FirstName = model.FirstName,
-                LastName = model.LastName
+                LastName = model.LastName,
+                User = user
             };
 
             user.Profile = profile;
@@ -62,7 +70,7 @@ namespace MiniWallet.Services{
             await _context.SaveChangesAsync();
 
             // Create default wallet for user
-            await CreateWalletForUser(user.Id);
+            await CreateWalletForUser(user);
 
             var token = GenerateJwtToken(user);
 
@@ -110,9 +118,9 @@ namespace MiniWallet.Services{
                 new Claim(ClaimTypes.Email, user.Email)
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"] ?? throw new InvalidOperationException("JWT:Secret is not configured")));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-            var expires = DateTime.Now.AddDays(Convert.ToDouble(_configuration["JWT:ExpireDays"]));
+            var expires = DateTime.Now.AddMinutes(Convert.ToDouble(_configuration["JWT:ExpiryMinutes"]));
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["JWT:Issuer"],
@@ -125,17 +133,17 @@ namespace MiniWallet.Services{
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        private async Task<Wallet> CreateWalletForUser(Guid userId)
+        private async Task<Wallet> CreateWalletForUser(User user)
         {
-            // In a real implementation, this would generate a secure wallet with a proper private key
-            // For demo purposes, we're just creating a placeholder wallet
+            var address = "0x" + Guid.NewGuid().ToString("N").Substring(0, 40);
             var wallet = new Wallet
             {
                 Id = Guid.NewGuid(),
-                UserId = userId,
-                PublicAddress = "0x" + Guid.NewGuid().ToString("N"),
-                EncryptedPrivateKey = "encrypted_key_placeholder",
-                CreatedAt = DateTime.UtcNow
+                UserId = user.Id,
+                PublicAddress = address,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                User = user
             };
 
             await _context.Wallets.AddAsync(wallet);
@@ -150,7 +158,9 @@ namespace MiniWallet.Services{
                     WalletId = wallet.Id,
                     CurrencyId = currency.Id,
                     Balance = 0,
-                    UpdatedAt = DateTime.UtcNow
+                    UpdatedAt = DateTime.UtcNow,
+                    Wallet = wallet,
+                    Currency = currency
                 };
                 await _context.WalletBalances.AddAsync(balance);
             }
@@ -161,11 +171,6 @@ namespace MiniWallet.Services{
 
         public async Task LogoutAsync(string userId)
         {
-            // In a real implementation, you might want to:
-            // 1. Add the token to a blacklist
-            // 2. Update the user's last logout time
-            // 3. Clear any session data
-            
             var user = await _context.Users.FindAsync(Guid.Parse(userId));
             if (user != null)
             {

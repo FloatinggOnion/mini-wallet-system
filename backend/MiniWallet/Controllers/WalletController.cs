@@ -1,12 +1,10 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using MiniWallet.Services;
 using MiniWallet.Models;
 using System.Security.Claims;
-using System.Threading.Tasks;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace MiniWallet.Controllers
 {
@@ -15,81 +13,149 @@ namespace MiniWallet.Controllers
     [Authorize]
     public class WalletController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IWalletService _walletService;
 
-        public WalletController(AppDbContext context)
+        public WalletController(IWalletService walletService)
         {
-            _context = context;
+            _walletService = walletService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Wallet>>> GetWallets()
+        public async Task<IActionResult> GetWallets()
         {
-            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            var wallets = await _context.Wallets
-                .Include(w => w.Balances)
-                    .ThenInclude(b => b.Currency)
-                .Where(w => w.UserId == userId)
-                .ToListAsync();
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
 
+            var wallets = await _walletService.GetWalletsByUserIdAsync(userId);
             return Ok(wallets);
         }
 
-        [HttpPost("connect")]
-        public async Task<ActionResult<Wallet>> ConnectWallet([FromBody] ConnectWalletRequest request)
+        [HttpPost]
+        public async Task<IActionResult> CreateWallet([FromBody] CreateWalletRequest request)
         {
-            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
 
-            // Verify if the wallet address is valid (you might want to add more validation)
-            if (string.IsNullOrEmpty(request.PublicAddress))
+            try
             {
-                return BadRequest("Invalid wallet address");
+                var wallet = await _walletService.CreateWalletAsync(userId, request.Password);
+                return Ok(wallet);
             }
-
-            // Check if wallet already exists for this user
-            var existingWallet = await _context.Wallets
-                .FirstOrDefaultAsync(w => w.UserId == userId && w.PublicAddress == request.PublicAddress);
-
-            if (existingWallet != null)
+            catch (Exception ex)
             {
-                return BadRequest("Wallet already connected");
+                return BadRequest(new { error = ex.Message });
             }
+        }
 
-            var wallet = new Wallet
+        [HttpGet("{walletId}")]
+        public async Task<IActionResult> GetWallet(string walletId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            try
             {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                PublicAddress = request.PublicAddress,
-                CreatedAt = DateTime.UtcNow
-            };
+                var wallet = await _walletService.GetWalletByIdAsync(walletId);
+                if (wallet.UserId != Guid.Parse(userId))
+                    return Forbid();
 
-            _context.Wallets.Add(wallet);
-            await _context.SaveChangesAsync();
-
-            return Ok(wallet);
+                return Ok(wallet);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
 
         [HttpGet("{walletId}/balance")]
-        public async Task<ActionResult<IEnumerable<WalletBalance>>> GetWalletBalances(Guid walletId)
+        public async Task<IActionResult> GetBalance(string walletId)
         {
-            var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value);
-            
-            var wallet = await _context.Wallets
-                .Include(w => w.Balances)
-                    .ThenInclude(b => b.Currency)
-                .FirstOrDefaultAsync(w => w.Id == walletId && w.UserId == userId);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
 
-            if (wallet == null)
+            try
             {
-                return NotFound("Wallet not found");
-            }
+                var wallet = await _walletService.GetWalletByIdAsync(walletId);
+                if (wallet.UserId != Guid.Parse(userId))
+                    return Forbid();
 
-            return Ok(wallet.Balances);
+                var balance = await _walletService.GetBalanceAsync(walletId);
+                return Ok(new { balance });
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpPost("{walletId}/send")]
+        public async Task<IActionResult> SendTransaction(string walletId, [FromBody] SendTransactionRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            try
+            {
+                var wallet = await _walletService.GetWalletByIdAsync(walletId);
+                if (wallet.UserId != Guid.Parse(userId))
+                    return Forbid();
+
+                var transaction = await _walletService.SendTransactionAsync(
+                    walletId,
+                    request.ToAddress,
+                    request.Amount,
+                    request.Password
+                );
+
+                return Ok(transaction);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+
+        [HttpGet("{walletId}/transactions")]
+        public async Task<IActionResult> GetTransactionHistory(string walletId)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return Unauthorized();
+
+            try
+            {
+                var wallet = await _walletService.GetWalletByIdAsync(walletId);
+                if (wallet.UserId != Guid.Parse(userId))
+                    return Forbid();
+
+                var transactions = await _walletService.GetTransactionHistoryAsync(walletId);
+                return Ok(transactions);
+            }
+            catch (KeyNotFoundException)
+            {
+                return NotFound();
+            }
         }
     }
 
-    public class ConnectWalletRequest
+    public class CreateWalletRequest
     {
-        public string PublicAddress { get; set; }
+        public required string Password { get; set; }
     }
-} 
+
+    public class SendTransactionRequest
+    {
+        public required string ToAddress { get; set; }
+        public decimal Amount { get; set; }
+        public required string Password { get; set; }
+    }
+}

@@ -67,7 +67,8 @@ namespace MiniWallet.Controllers
                     Id = Guid.NewGuid(),
                     UserId = user.Id,
                     FirstName = request.FirstName,
-                    LastName = request.LastName
+                    LastName = request.LastName,
+                    User = user
                 };
             }
             else

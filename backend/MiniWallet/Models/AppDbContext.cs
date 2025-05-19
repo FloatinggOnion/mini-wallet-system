@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
-
-namespace MiniWallet.Models{
+namespace MiniWallet.Models
+{
     public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
@@ -31,27 +31,15 @@ namespace MiniWallet.Models{
                 .WithOne(b => b.Wallet)
                 .HasForeignKey(b => b.WalletId);
 
-            modelBuilder.Entity<Wallet>()
-                .HasMany(w => w.Transactions)
-                .WithOne(t => t.Wallet)
-                .HasForeignKey(t => t.WalletId);
-
             modelBuilder.Entity<Currency>()
                 .HasMany(c => c.WalletBalances)
                 .WithOne(wb => wb.Currency)
                 .HasForeignKey(wb => wb.CurrencyId);
 
-            modelBuilder.Entity<Currency>()
-                .HasMany(c => c.Transactions)
-                .WithOne(t => t.Currency)
-                .HasForeignKey(t => t.CurrencyId);
-
             // Seed initial cryptocurrency data
             modelBuilder.Entity<Currency>().HasData(
-                new Currency { Id = 1, Symbol = "BTC", Name = "Bitcoin", NetworkType = "Bitcoin", IsActive = true },
-                new Currency { Id = 2, Symbol = "ETH", Name = "Ethereum", NetworkType = "Ethereum", IsActive = true },
-                new Currency { Id = 3, Symbol = "SOL", Name = "Solana", NetworkType = "Solana", IsActive = true }
-                // Add more currencies as needed
+                new Currency { Id = 1, Symbol = "ETH", Name = "Ethereum", NetworkType = "Ethereum", IsActive = true },
+                new Currency { Id = 2, Symbol = "BTC", Name = "Bitcoin", NetworkType = "Bitcoin", IsActive = true }
             );
         }
     }

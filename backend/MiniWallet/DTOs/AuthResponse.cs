@@ -1,7 +1,10 @@
-public class AuthResponse
+namespace MiniWallet.DTOs
 {
-    public bool Successful { get; set; }
-    public string[] Errors { get; set; }
-    public string Token { get; set; }
-    public Guid UserId { get; set; }
+    public class AuthResponse
+    {
+        public bool Successful { get; set; }
+        public string[] Errors { get; set; } = Array.Empty<string>();
+        public string Token { get; set; } = string.Empty;
+        public Guid? UserId { get; set; }
+    }
 }

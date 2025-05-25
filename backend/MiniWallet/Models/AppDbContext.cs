@@ -38,8 +38,7 @@ namespace MiniWallet.Models
 
             // Seed initial cryptocurrency data
             modelBuilder.Entity<Currency>().HasData(
-                new Currency { Id = 1, Symbol = "ETH", Name = "Ethereum", NetworkType = "Ethereum", IsActive = true },
-                new Currency { Id = 2, Symbol = "BTC", Name = "Bitcoin", NetworkType = "Bitcoin", IsActive = true }
+                new Currency { Id = 1, Symbol = "ETH", Name = "Ethereum", NetworkType = "Ethereum", IsActive = true }
             );
         }
     }

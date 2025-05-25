@@ -50,14 +50,6 @@ namespace MiniWallet.Migrations
                             Name = "Ethereum",
                             NetworkType = "Ethereum",
                             Symbol = "ETH"
-                        },
-                        new
-                        {
-                            Id = 2,
-                            IsActive = true,
-                            Name = "Bitcoin",
-                            NetworkType = "Bitcoin",
-                            Symbol = "BTC"
                         });
                 });
 

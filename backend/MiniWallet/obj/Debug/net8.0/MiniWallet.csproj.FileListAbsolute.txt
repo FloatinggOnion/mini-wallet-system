@@ -8,7 +8,6 @@
 /Users/paul/Documents/programming/zone-wallet-system/backend/MiniWallet/obj/Debug/net8.0/MiniWallet.sourcelink.json
 /Users/paul/Documents/programming/zone-wallet-system/backend/MiniWallet/bin/Debug/net8.0/appsettings.Development.json
 /Users/paul/Documents/programming/zone-wallet-system/backend/MiniWallet/bin/Debug/net8.0/appsettings.json
-/Users/paul/Documents/programming/zone-wallet-system/backend/MiniWallet/bin/Debug/net8.0/Blockchain/tsconfig.json
 /Users/paul/Documents/programming/zone-wallet-system/backend/MiniWallet/bin/Debug/net8.0/MiniWallet.staticwebassets.endpoints.json
 /Users/paul/Documents/programming/zone-wallet-system/backend/MiniWallet/bin/Debug/net8.0/MiniWallet
 /Users/paul/Documents/programming/zone-wallet-system/backend/MiniWallet/bin/Debug/net8.0/MiniWallet.deps.json
@@ -186,3 +185,7 @@
 /Users/paul/Documents/programming/zone-wallet-system/backend/MiniWallet/bin/Debug/net8.0/tr/Microsoft.CodeAnalysis.Workspaces.resources.dll
 /Users/paul/Documents/programming/zone-wallet-system/backend/MiniWallet/bin/Debug/net8.0/zh-Hans/Microsoft.CodeAnalysis.Workspaces.resources.dll
 /Users/paul/Documents/programming/zone-wallet-system/backend/MiniWallet/bin/Debug/net8.0/zh-Hant/Microsoft.CodeAnalysis.Workspaces.resources.dll
+/Users/paul/Documents/programming/zone-wallet-system/backend/MiniWallet/bin/Debug/net8.0/Chaos.NaCl.dll
+/Users/paul/Documents/programming/zone-wallet-system/backend/MiniWallet/bin/Debug/net8.0/NBitcoin.dll
+/Users/paul/Documents/programming/zone-wallet-system/backend/MiniWallet/bin/Debug/net8.0/Solnet.Rpc.dll
+/Users/paul/Documents/programming/zone-wallet-system/backend/MiniWallet/bin/Debug/net8.0/Solnet.Wallet.dll

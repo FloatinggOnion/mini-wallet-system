@@ -70,6 +70,10 @@
               "target": "Package",
               "version": "[8.0.0, )"
             },
+            "NBitcoin": {
+              "target": "Package",
+              "version": "[7.0.15, )"
+            },
             "Nethereum.Hex": {
               "target": "Package",
               "version": "[4.15.0, )"
@@ -85,6 +89,14 @@
             "Nethereum.Web3": {
               "target": "Package",
               "version": "[4.15.0, )"
+            },
+            "Solnet.Rpc": {
+              "target": "Package",
+              "version": "[0.5.6, )"
+            },
+            "Solnet.Wallet": {
+              "target": "Package",
+              "version": "[0.5.6, )"
             },
             "Swashbuckle.AspNetCore": {
               "target": "Package",

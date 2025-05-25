@@ -18,7 +18,40 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "MiniWallet API",
+        Version = "v1",
+        Description = "API for managing cryptocurrency wallets"
+    });
+
+    // Add JWT Authentication support in Swagger
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+        Scheme = "Bearer"
+    });
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
 
 // Configure JSON serialization
 builder.Services.AddControllers()
@@ -39,6 +72,11 @@ builder.Services.AddScoped<IWalletService, WalletService>();
 
 // Register Ethereum service
 builder.Services.AddScoped<IEthereumService, EthereumService>();
+
+// Add services to the container
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient<IPriceService, PriceService>();
+builder.Services.AddScoped<IPriceService, PriceService>();
 
 builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
 

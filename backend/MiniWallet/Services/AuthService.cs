@@ -69,9 +69,6 @@ namespace MiniWallet.Services{
             await _context.Users.AddAsync(user);
             await _context.SaveChangesAsync();
 
-            // Create default wallet for user
-            await CreateWalletForUser(user);
-
             var token = GenerateJwtToken(user);
 
             return new AuthResponse
@@ -131,42 +128,6 @@ namespace MiniWallet.Services{
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
-
-        private async Task<Wallet> CreateWalletForUser(User user)
-        {
-            var address = "0x" + Guid.NewGuid().ToString("N").Substring(0, 40);
-            var wallet = new Wallet
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                PublicAddress = address,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                User = user
-            };
-
-            await _context.Wallets.AddAsync(wallet);
-            
-            // Initialize balances for all active currencies
-            var currencies = await _context.Currencies.Where(c => c.IsActive).ToListAsync();
-            foreach (var currency in currencies)
-            {
-                var balance = new WalletBalance
-                {
-                    Id = Guid.NewGuid(),
-                    WalletId = wallet.Id,
-                    CurrencyId = currency.Id,
-                    Balance = 0,
-                    UpdatedAt = DateTime.UtcNow,
-                    Wallet = wallet,
-                    Currency = currency
-                };
-                await _context.WalletBalances.AddAsync(balance);
-            }
-
-            await _context.SaveChangesAsync();
-            return wallet;
         }
 
         public async Task LogoutAsync(string userId)

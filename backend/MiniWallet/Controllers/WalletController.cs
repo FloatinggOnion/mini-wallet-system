@@ -14,10 +14,12 @@ namespace MiniWallet.Controllers
     public class WalletController : ControllerBase
     {
         private readonly IWalletService _walletService;
+        private readonly IEthereumService _ethereumService;
 
-        public WalletController(IWalletService walletService)
+        public WalletController(IWalletService walletService, IEthereumService ethereumService)
         {
             _walletService = walletService;
+            _ethereumService = ethereumService;
         }
 
         [HttpGet]
@@ -83,12 +85,25 @@ namespace MiniWallet.Controllers
                 if (wallet.UserId != Guid.Parse(userId))
                     return Forbid();
 
+                try
+                {
                 var balance = await _walletService.GetBalanceAsync(walletId);
                 return Ok(new { balance });
+                }
+                catch (Exception ex)
+                {
+                    // Log the error here
+                    return StatusCode(500, new { error = "Failed to get wallet balance", details = ex.Message });
+                }
             }
             catch (KeyNotFoundException)
             {
                 return NotFound();
+            }
+            catch (Exception ex)
+            {
+                // Log the error here
+                return StatusCode(500, new { error = "An unexpected error occurred", details = ex.Message });
             }
         }
 
@@ -145,6 +160,59 @@ namespace MiniWallet.Controllers
                 return NotFound();
             }
         }
+
+        [HttpPost("{walletId}/fund")]
+        public async Task<IActionResult> FundWallet(string walletId, [FromBody] FundWalletRequest request)
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+            {
+                Console.WriteLine("No user ID found in claims");
+                return Unauthorized();
+            }
+            Console.WriteLine($"Processing funding request for wallet {walletId} by user {userId}");
+
+            try
+            {
+                var wallet = await _walletService.GetWalletByIdAsync(walletId);
+                Console.WriteLine($"Found wallet with ID {wallet.Id}, owned by user {wallet.UserId}");
+                
+                if (wallet.UserId != Guid.Parse(userId))
+                {
+                    Console.WriteLine($"Wallet ownership mismatch: wallet belongs to {wallet.UserId}, but request is from {userId}");
+                    return Forbid();
+                }
+
+                var transaction = await _ethereumService.RequestFundingAsync(walletId, request.Amount, request.Password);
+                return Ok(transaction);
+            }
+            catch (KeyNotFoundException)
+            {
+                Console.WriteLine($"Wallet {walletId} not found");
+                return NotFound();
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                Console.WriteLine($"Unauthorized access: {ex.Message}");
+                return Unauthorized(new { error = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"Invalid argument: {ex.Message}");
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine($"Invalid operation: {ex.Message}");
+                return BadRequest(new { error = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                return StatusCode(500, new { error = "Failed to fund wallet", details = ex.Message });
+            }
+        }
     }
 
     public class CreateWalletRequest
@@ -155,6 +223,12 @@ namespace MiniWallet.Controllers
     public class SendTransactionRequest
     {
         public required string ToAddress { get; set; }
+        public decimal Amount { get; set; }
+        public required string Password { get; set; }
+    }
+
+    public class FundWalletRequest
+    {
         public decimal Amount { get; set; }
         public required string Password { get; set; }
     }

@@ -90,10 +90,18 @@ export function WalletProvider({ children }: { children: ReactNode }) {
   const selectWallet = async (walletId: string) => {
     try {
       setLoading(true);
-      const wallet = await walletService.getWalletDetails(walletId);
-      setSelectedWallet(wallet);
-      await refreshBalance();
-      await refreshTransactions();
+      if (!selectedWallet || selectedWallet.id !== walletId) {
+        const wallet = await walletService.getWalletDetails(walletId);
+        setSelectedWallet(wallet);
+        
+        const [balanceData, transactionsData] = await Promise.all([
+          walletService.getWalletBalance(walletId),
+          walletService.getTransactionHistory(walletId)
+        ]);
+        
+        setBalance(balanceData.balance);
+        setTransactions(transactionsData);
+      }
     } catch (err) {
       setError('Failed to load wallet details');
       console.error('Error loading wallet details:', err);

@@ -117,36 +117,48 @@ const authService = {
 // Wallet service
 const walletService = {
   createWallet: async (password: string) => {
+    console.log('Creating wallet...');
     const response = await api.post('/wallet', { password });
+    console.log('Wallet created:', response.data);
     return response.data;
   },
   
   getWallets: async () => {
+    console.log('Fetching wallets...');
     const response = await api.get('/wallet');
+    console.log('Wallets fetched:', response.data);
     return response.data;
   },
   
   getWalletDetails: async (walletId: string) => {
+    console.log('Fetching wallet details for:', walletId);
     const response = await api.get(`/wallet/${walletId}`);
+    console.log('Wallet details fetched:', response.data);
     return response.data;
   },
 
   getWalletBalance: async (walletId: string) => {
+    console.log('Fetching wallet balance for:', walletId);
     const response = await api.get(`/wallet/${walletId}/balance`);
+    console.log('Wallet balance fetched:', response.data);
     return response.data;
   },
 
   sendTransaction: async (walletId: string, toAddress: string, amount: number, password: string) => {
+    console.log('Sending transaction from wallet:', walletId, 'to:', toAddress, 'amount:', amount);
     const response = await api.post(`/wallet/${walletId}/send`, {
       toAddress,
       amount,
       password
     });
+    console.log('Transaction sent:', response.data);
     return response.data;
   },
 
   getTransactionHistory: async (walletId: string) => {
+    console.log('Fetching transaction history for wallet:', walletId);
     const response = await api.get(`/wallet/${walletId}/transactions`);
+    console.log('Transaction history fetched:', response.data);
     return response.data;
   }
 };
